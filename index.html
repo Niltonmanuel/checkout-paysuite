@@ -5,15 +5,17 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Finalizar Pedido | Nilton Manuel</title>
     <style>
-        body { font-family: sans-serif; background-color: #f0f2f5; margin: 0; display: flex; justify-content: center; padding: 20px; }
-        .checkout-card { background: white; width: 100%; max-width: 400px; border-radius: 15px; box-shadow: 0 10px 25px rgba(0,0,0,0.1); padding: 25px; }
+        body { font-family: 'Segoe UI', Roboto, sans-serif; background-color: #f0f2f5; margin: 0; display: flex; justify-content: center; align-items: center; min-height: 100vh; padding: 20px; }
+        .checkout-card { background: white; width: 100%; max-width: 400px; border-radius: 15px; box-shadow: 0 10px 25px rgba(0,0,0,0.1); padding: 25px; box-sizing: border-box; }
         .header { text-align: center; border-bottom: 2px dashed #eee; padding-bottom: 15px; margin-bottom: 20px; }
-        .price-tag { font-size: 28px; color: #1a73e8; font-weight: bold; }
+        .price-tag { font-size: 28px; color: #1a73e8; font-weight: bold; margin: 10px 0; }
         .input-group { margin-bottom: 20px; }
         label { display: block; margin-bottom: 8px; font-weight: bold; color: #333; }
-        select, input { width: 100%; padding: 12px; border: 2px solid #ddd; border-radius: 8px; font-size: 16px; box-sizing: border-box; }
-        .btn-pagar { width: 100%; background: #28a745; color: white; padding: 18px; border: none; border-radius: 8px; font-size: 18px; font-weight: bold; cursor: pointer; transition: 0.3s; }
+        select, input { width: 100%; padding: 12px; border: 2px solid #ddd; border-radius: 8px; font-size: 16px; box-sizing: border-box; outline: none; }
+        select:focus, input:focus { border-color: #1a73e8; }
+        .btn-pagar { width: 100%; background: #28a745; color: white; padding: 18px; border: none; border-radius: 8px; font-size: 18px; font-weight: bold; cursor: pointer; transition: 0.3s; margin-top: 10px; }
         .btn-pagar:active { transform: scale(0.98); }
+        .btn-pagar:disabled { background: #94d3a2; cursor: not-allowed; }
         .badges { margin-top: 20px; text-align: center; font-size: 12px; color: #666; line-height: 1.6; }
     </style>
 </head>
@@ -22,12 +24,12 @@
 <div class="checkout-card">
     <div class="header">
         <h2 style="margin:0">Nilton Manuel</h2>
-        <p style="color:#666">Oportunidade de Negócio NeoLife</p>
+        <p style="color:#666; margin: 5px 0;">Oportunidade de Negócio NeoLife</p>
         <div class="price-tag">10,50 MZN</div>
     </div>
 
     <div class="input-group">
-        <label>Método de Pagamento</label>
+        <label for="metodo">Método de Pagamento</label>
         <select id="metodo">
             <option value="mpesa">M-Pesa (Vodacom)</option>
             <option value="emola">e-Mola (Movitel)</option>
@@ -36,11 +38,11 @@
     </div>
 
     <div class="input-group">
-        <label>Seu Número de Telefone</label>
-        <input type="tel" id="telefone" placeholder="84XXXXXXX">
+        <label for="telefone">Seu Número de Telefone</label>
+        <input type="tel" id="telefone" placeholder="Ex: 848841352" maxlength="13">
     </div>
 
-    <button class="btn-pagar" onclick="processarPagamento()">CONCLUIR PAGAMENTO AGORA</button>
+    <button class="btn-pagar" id="main-btn" onclick="processarPagamento()">CONCLUIR PAGAMENTO AGORA</button>
 
     <div class="badges">
         🔒 Pagamento 100% Seguro via PaySuite<br>
@@ -50,12 +52,19 @@
 
 <script>
 async function processarPagamento() {
-    const btn = document.querySelector('.btn-pagar');
-    const num = document.getElementById('telefone').value;
-    const met = document.getElementById('metodo').value;
+    const btn = document.getElementById('main-btn');
+    const inputTelefone = document.getElementById('telefone');
+    const metodoSelecionado = document.getElementById('metodo').value;
 
-    if(!num) return alert("Por favor, insira o número!");
+    // Limpeza rigorosa do número
+    let numeroLimpo = inputTelefone.value.replace(/\s+/g, '').replace('+258', '');
 
+    if(!numeroLimpo || numeroLimpo.length < 9) {
+        alert("Por favor, insira um número válido com 9 dígitos!");
+        return;
+    }
+
+    // Estado de carregamento
     btn.innerText = "PROCESSANDO...";
     btn.disabled = true;
 
@@ -63,26 +72,30 @@ async function processarPagamento() {
         const response = await fetch('https://paysuite.tech/api/v1/payments', {
             method: 'POST',
             headers: {
-                'Authorization': 'Bearer 1509|Xr2cOqWwevPiSOjfeu26SLrIP7HKFHKxNnUhhfg8c661f603', // COLOQUE SEU TOKEN AQUI
+                // SUBSTITUA O TOKEN ABAIXO PELO SEU TOKEN REAL DA DASHBOARD
+                'Authorization': 'Bearer 1509|Xr2cOqWwevPiSOjfeu26SLrIP7HKFHKxNnUhhfg8c661f603', 
                 'Content-Type': 'application/json',
                 'Accept': 'application/json'
             },
             body: JSON.stringify({
-                amount: 10.50, //
-                method: met, //
-                reference: "REF_" + Date.now(), // Garante referência única
-                description: "Venda Direta Nilton Manuel",
-                msisdn: num //
+                "amount": 10.50,
+                "method": metodoSelecionado,
+                "reference": "REF_" + Date.now(), // Referência única evita erro 422
+                "description": "Checkout Alta Conversão - Nilton",
+                "msisdn": numeroLimpo
             })
         });
 
+        const resultado = await response.json();
+
         if (response.ok) {
-            alert("Sucesso! Digite o seu PIN no celular para confirmar.");
+            alert("Sucesso! Digite o seu PIN no celular para confirmar o pagamento de 10.50 MT.");
         } else {
-            alert("Erro no pagamento. Verifique os dados.");
+            // Exibe a mensagem real de erro da PaySuite (ex: Token Inválido ou Saldo Insuficiente)
+            alert("Erro da PaySuite: " + (resultado.message || "Verifique os dados e tente novamente."));
         }
-    } catch (e) {
-        alert("Erro de conexão.");
+    } catch (error) {
+        alert("Erro de Conexão: Verifique sua internet.");
     } finally {
         btn.innerText = "CONCLUIR PAGAMENTO AGORA";
         btn.disabled = false;
