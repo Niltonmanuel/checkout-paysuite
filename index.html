@@ -63,7 +63,7 @@ async function processarPagamento() {
         const response = await fetch('https://paysuite.tech/api/v1/payments', {
             method: 'POST',
             headers: {
-                'Authorization': '1509|Xr2cOqWwevPiSOjfeu26SLrIP7HKFHKxNnUhhfg8c661f603', // COLOQUE SEU TOKEN AQUI
+                'Authorization': 'Bearer 1509|Xr2cOqWwevPiSOjfeu26SLrIP7HKFHKxNnUhhfg8c661f603', // COLOQUE SEU TOKEN AQUI
                 'Content-Type': 'application/json',
                 'Accept': 'application/json'
             },
