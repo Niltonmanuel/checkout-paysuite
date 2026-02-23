@@ -12,9 +12,7 @@
         .input-group { margin-bottom: 20px; }
         label { display: block; margin-bottom: 8px; font-weight: bold; color: #333; }
         select, input { width: 100%; padding: 12px; border: 2px solid #ddd; border-radius: 8px; font-size: 16px; box-sizing: border-box; outline: none; }
-        select:focus, input:focus { border-color: #1a73e8; }
         .btn-pagar { width: 100%; background: #28a745; color: white; padding: 18px; border: none; border-radius: 8px; font-size: 18px; font-weight: bold; cursor: pointer; transition: 0.3s; margin-top: 10px; }
-        .btn-pagar:active { transform: scale(0.98); }
         .btn-pagar:disabled { background: #94d3a2; cursor: not-allowed; }
         .badges { margin-top: 20px; text-align: center; font-size: 12px; color: #666; line-height: 1.6; }
     </style>
@@ -56,15 +54,13 @@ async function processarPagamento() {
     const inputTelefone = document.getElementById('telefone');
     const metodoSelecionado = document.getElementById('metodo').value;
 
-    // Limpeza rigorosa do número
     let numeroLimpo = inputTelefone.value.replace(/\s+/g, '').replace('+258', '');
 
     if(!numeroLimpo || numeroLimpo.length < 9) {
-        alert("Por favor, insira um número válido com 9 dígitos!");
+        alert("Por favor, insira um número válido!");
         return;
     }
 
-    // Estado de carregamento
     btn.innerText = "PROCESSANDO...";
     btn.disabled = true;
 
@@ -72,7 +68,7 @@ async function processarPagamento() {
         const response = await fetch('https://paysuite.tech/api/v1/payments', {
             method: 'POST',
             headers: {
-                // SUBSTITUA O TOKEN ABAIXO PELO SEU TOKEN REAL DA DASHBOARD
+                // VERIFIQUE SE O SEU TOKEN ABAIXO ESTÁ CORRETO
                 'Authorization': 'Bearer 1509|Xr2cOqWwevPiSOjfeu26SLrIP7HKFHKxNnUhhfg8c661f603', 
                 'Content-Type': 'application/json',
                 'Accept': 'application/json'
@@ -80,8 +76,8 @@ async function processarPagamento() {
             body: JSON.stringify({
                 "amount": 10.50,
                 "method": metodoSelecionado,
-                "reference": "REF_" + Date.now(), // Referência única evita erro 422
-                "description": "Checkout Alta Conversão - Nilton",
+                "reference": "REF" + Date.now(), // AGORA APENAS LETRAS E NÚMEROS
+                "description": "Checkout NeoLife Nilton",
                 "msisdn": numeroLimpo
             })
         });
@@ -89,10 +85,9 @@ async function processarPagamento() {
         const resultado = await response.json();
 
         if (response.ok) {
-            alert("Sucesso! Digite o seu PIN no celular para confirmar o pagamento de 10.50 MT.");
+            alert("Sucesso! Digite o PIN no seu celular para pagar 10.50 MT.");
         } else {
-            // Exibe a mensagem real de erro da PaySuite (ex: Token Inválido ou Saldo Insuficiente)
-            alert("Erro da PaySuite: " + (resultado.message || "Verifique os dados e tente novamente."));
+            alert("Erro da PaySuite: " + (resultado.message || "Dados inválidos"));
         }
     } catch (error) {
         alert("Erro de Conexão: Verifique sua internet.");
